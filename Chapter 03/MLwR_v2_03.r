@@ -8,9 +8,13 @@ wbcd <- read.csv("wisc_bc_data.csv", stringsAsFactors = FALSE)
 
 # examine the structure of the wbcd data frame
 str(wbcd)
+library(skimr)
+skim(wbcd)
 
 # drop the id feature
 wbcd <- wbcd[-1]
+skim(wbcd)
+str(wbcd)
 
 # table of diagnosis
 table(wbcd$diagnosis)
