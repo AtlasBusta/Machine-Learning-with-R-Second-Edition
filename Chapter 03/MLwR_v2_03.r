@@ -41,6 +41,8 @@ normalize(c(10, 20, 30, 40, 50))
 # normalize the wbcd data
 wbcd_n <- as.data.frame(lapply(wbcd[2:31], normalize))
 
+skim(wbcd_n)
+
 # confirm that normalization worked
 summary(wbcd_n$area_mean)
 
@@ -77,6 +79,7 @@ wbcd_z <- as.data.frame(scale(wbcd[-1]))
 
 # confirm that the transformation was applied correctly
 summary(wbcd_z$area_mean)
+skim(wbcd_z)
 
 # create training and test datasets
 wbcd_train <- wbcd_z[1:469, ]
