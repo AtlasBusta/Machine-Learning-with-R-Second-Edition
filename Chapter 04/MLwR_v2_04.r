@@ -145,3 +145,81 @@ sms_test_pred2 <- predict(sms_classifier2, sms_test)
 CrossTable(sms_test_pred2, sms_test_labels,
            prop.chisq = FALSE, prop.t = FALSE, prop.r = FALSE,
            dnn = c('predicted', 'actual'))
+
+# Try new train and test splits
+# Load necessary library
+library(caTools)
+
+# Function to split dataset
+split_dataset <- function(features, labels, split_ratio) {
+  set.seed(123) # for reproducibility
+  split_index <- sample.split(labels, SplitRatio = split_ratio)
+  train_features <- features[split_index, ]
+  test_features <- features[!split_index, ]
+  train_labels <- labels[split_index]
+  test_labels <- labels[!split_index]
+  
+  return(list("train_features" = train_features, 
+              "test_features" = test_features, 
+              "train_labels" = train_labels, 
+              "test_labels" = test_labels))
+}
+
+# Combine datasets
+combined_features <- rbind(sms_train, sms_test)
+combined_labels <- c(sms_train_labels, sms_test_labels)
+
+# Split the dataset into different ratios
+splits <- list("50:50" = 0.5, "70:30" = 0.7, "75:25" = 0.75, "80:20" = 0.8, "90:10" = 0.9)
+
+split_datasets <- lapply(splits, function(split_ratio) {
+  split_dataset(combined_features, combined_labels, split_ratio)
+})
+
+
+# Function to calculate and print proportion tables for train and test labels
+calculate_proportions <- function(split_datasets) {
+  for (split in names(split_datasets)) {
+    cat("Proportions for", split, "split:\n")
+    cat("Train Labels:\n")
+    print(prop.table(table(split_datasets[[split]]$train_labels)))
+    cat("Test Labels:\n")
+    print(prop.table(table(split_datasets[[split]]$test_labels)))
+    cat("\n")
+  }
+}
+
+# Calculate and print proportions for all splits
+calculate_proportions(split_datasets)
+
+
+# Function to train, predict, and print cross table
+train_predict_print <- function(split_datasets) {
+  results <- list() # To store results
+  
+  for (split in names(split_datasets)) {
+    cat("Training and evaluating for split:", split, "\n")
+    
+    # Train the model
+    model <- naiveBayes(split_datasets[[split]]$train_features, split_datasets[[split]]$train_labels)
+    
+    # Make predictions
+    predictions <- predict(model, split_datasets[[split]]$test_features)
+    
+    # Print cross table
+    cross_tab <- CrossTable(predictions, split_datasets[[split]]$test_labels,
+                            prop.chisq = FALSE, prop.t = FALSE, prop.r = FALSE,
+                            dnn = c('predicted', 'actual'))
+    
+    # Store results
+    results[[split]] <- list("model" = model, "predictions" = predictions, "cross_tab" = cross_tab)
+    
+    cat("\n")
+  }
+  
+  return(results)
+}
+
+# Use the function
+model_results <- train_predict_print(split_datasets)
+
