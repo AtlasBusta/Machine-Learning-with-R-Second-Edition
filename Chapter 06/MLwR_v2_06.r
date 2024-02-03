@@ -54,6 +54,8 @@ model
 ## Step 2: Exploring and preparing the data ----
 insurance <- read.csv("insurance.csv", stringsAsFactors = TRUE)
 str(insurance)
+library(skimr)
+skim(insurance)
 
 # summarize the charges variable
 summary(insurance$expenses)
@@ -73,6 +75,7 @@ pairs(insurance[c("age", "bmi", "children", "expenses")])
 # more informative scatterplot matrix
 library(psych)
 pairs.panels(insurance[c("age", "bmi", "children", "expenses")])
+pairs.panels(insurance[c("age", "age2", "bmi", "bmi30", "children", "expenses")])
 
 ## Step 3: Training a model on the data ----
 ins_model <- lm(expenses ~ age + children + bmi + sex + smoker + region,
@@ -125,6 +128,7 @@ wine <- read.csv("whitewines.csv")
 
 # examine the wine data
 str(wine)
+skim(wine)
 
 # the distribution of quality ratings
 hist(wine$quality)
@@ -134,6 +138,7 @@ summary(wine)
 
 wine_train <- wine[1:3750, ]
 wine_test <- wine[3751:4898, ]
+skim(wine_train)
 
 ## Step 3: Training a model on the data ----
 # regression tree using rpart

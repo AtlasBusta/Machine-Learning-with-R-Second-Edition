@@ -11,7 +11,7 @@ curve(-x * log2(x) - (1 - x) * log2(1 - x),
 
 ## Example: Identifying Risky Bank Loans ----
 ## Step 2: Exploring and preparing the data ----
-credit <- read.csv("credit.csv")
+credit <- read.csv("credit.csv", stringsAsFactors = T)
 str(credit)
 
 # look at two characteristics of the applicant
@@ -37,19 +37,21 @@ credit_train <- credit[train_sample, ]
 credit_test  <- credit[-train_sample, ]
 
 # check the proportion of class variable
+prop.table(table(credit$default))
 prop.table(table(credit_train$default))
 prop.table(table(credit_test$default))
 
 ## Step 3: Training a model on the data ----
 # build the simplest decision tree
 library(C50)
-credit_model <- C5.0(credit_train[-17], credit_train$default)
+credit_model <- C5.0(credit_train[-17], as.factor(credit_train$default))
 
 # display simple facts about the tree
 credit_model
 
 # display detailed information about the tree
 summary(credit_model)
+
 
 ## Step 4: Evaluating model performance ----
 # create a factor vector of predictions on test data
@@ -82,16 +84,29 @@ matrix_dimensions <- list(c("no", "yes"), c("no", "yes"))
 names(matrix_dimensions) <- c("predicted", "actual")
 matrix_dimensions
 
-# build the matrix
+# build the matrix | Penalty matrix , cost matrix
 error_cost <- matrix(c(0, 1, 4, 0), nrow = 2, dimnames = matrix_dimensions)
 error_cost
 
 # apply the cost matrix to the tree
 credit_cost <- C5.0(credit_train[-17], credit_train$default,
                           costs = error_cost)
+credit_cost
+summary(credit_cost)
 credit_cost_pred <- predict(credit_cost, credit_test)
 
 CrossTable(credit_test$default, credit_cost_pred,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual default', 'predicted default'))
+
+# apply credit cost matrix to a boosted model
+credit_cost_boost <- C5.0(credit_train[-17], credit_train$default,
+                    costs = error_cost, trials = 10)
+credit_cost_boost
+summary(credit_cost_boost)
+credit_cost_boost_pred <- predict(credit_cost_boost, credit_test)
+
+CrossTable(credit_test$default, credit_cost_boost_pred,
            prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
            dnn = c('actual default', 'predicted default'))
 
@@ -111,7 +126,9 @@ mushrooms$veil_type <- NULL
 table(mushrooms$type)
 
 ## Step 3: Training a model on the data ----
-library(RWeka)
+library(RWeka) #need Java Runtime Environment Installed
+
+library(OneR) # only has OneR not RIPPER
 
 # train OneR() on the data
 mushroom_1R <- OneR(type ~ ., data = mushrooms)
@@ -128,4 +145,11 @@ summary(mushroom_JRip)
 # Rule Learner Using C5.0 Decision Trees (not in text)
 library(C50)
 mushroom_c5rules <- C5.0(type ~ odor + gill_size, data = mushrooms, rules = TRUE)
+mushroom_c5rules
 summary(mushroom_c5rules)
+
+
+# View the tree as a plot
+library(partykit)
+credit_model_party <- as.party(credit_model)
+plot(credit_model_party)

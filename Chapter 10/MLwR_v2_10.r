@@ -14,7 +14,7 @@ sms_results <- data.frame(actual_type = sms_test_labels,
                           prob_ham = round(sms_test_prob[ , 1], 5))
 
 # uncomment this line to output the sms_results to CSV
-# write.csv(sms_results, "sms_results.csv", row.names = FALSE)
+#write.csv(sms_results, "sms_results.csv", row.names = FALSE)
 
 ## Confusion matrixes in R ----
 sms_results <- read.csv("sms_results.csv")
@@ -23,10 +23,11 @@ sms_results <- read.csv("sms_results.csv")
 head(sms_results)
 
 # test cases where the model is less confident
-head(subset(sms_results, prob_spam > 0.40 & prob_spam < 0.60))
+subset(sms_results, prob_spam > 0.40 & prob_spam < 0.60)
 
 # test cases where the model was wrong
 head(subset(sms_results, actual_type != predict_type))
+length(subset(sms_results, actual_type != predict_type)[,1])
 
 # specifying vectors
 table(sms_results$actual_type, sms_results$predict_type)
@@ -91,12 +92,15 @@ rec
 
 # example using the caret package
 library(caret)
-posPredValue(sms_results$predict_type, sms_results$actual_type, positive = "spam")
-sensitivity(sms_results$predict_type, sms_results$actual_type, positive = "spam")
+precision_ <- posPredValue(sms_results$predict_type, sms_results$actual_type, positive = "spam")
+recall_ <- sensitivity(sms_results$predict_type, sms_results$actual_type, positive = "spam")
 
 # F-measure
 f <- (2 * prec * rec) / (prec + rec)
 f
+# F-measure
+f_ <- (2 * precision_ * recall_) / (precision_ + recall_)
+f_
 
 f <- (2 * 152) / (2 * 152 + 4 + 31)
 f
@@ -131,10 +135,20 @@ credit_train <- credit[random_ids[1:500],]
 credit_validate <- credit[random_ids[501:750], ]
 credit_test <- credit[random_ids[751:1000], ]
 
-# using caret function
+# check the classes
+prop.table(table(credit_train$default))
+prop.table(table(credit_validate$default))
+prop.table(table(credit_test$default))
+
+
+# using caret function Stratified Random Sampling
 in_train <- createDataPartition(credit$default, p = 0.75, list = FALSE)
 credit_train <- credit[in_train, ]
 credit_test <- credit[-in_train, ]
+
+#check classes
+prop.table(table(credit_train$default))
+prop.table(table(credit_test$default))
 
 # 10-fold CV
 folds <- createFolds(credit$default, k = 10)
@@ -147,7 +161,7 @@ library(caret)
 library(C50)
 library(irr)
 
-credit <- read.csv("credit.csv")
+credit <- read.csv("credit.csv", stringsAsFactors = T)
 
 set.seed(123)
 folds <- createFolds(credit$default, k = 10)

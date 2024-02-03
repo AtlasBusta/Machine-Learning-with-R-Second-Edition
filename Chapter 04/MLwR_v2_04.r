@@ -146,6 +146,8 @@ CrossTable(sms_test_pred2, sms_test_labels,
            prop.chisq = FALSE, prop.t = FALSE, prop.r = FALSE,
            dnn = c('predicted', 'actual'))
 
+
+
 # Try new train and test splits
 # Load necessary library
 library(caTools)
